@@ -1,0 +1,30 @@
+{
+  "name": "secure-exam-electron",
+  "version": "1.0.0",
+  "description": "Secure Exam Electron Application",
+  "main": "main.js",
+  "author": "NCR",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "ps-list": "^9.0.0"
+  },
+  "devDependencies": {
+    "electron": "^37.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.example.secureexam",
+    "productName": "Secure Exam",
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

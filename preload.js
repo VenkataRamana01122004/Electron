@@ -1,0 +1,26 @@
+const { contextBridge, ipcRenderer } = require("electron");
+
+contextBridge.exposeInMainWorld("electronAPI", {
+    loadChrome: url => ipcRenderer.invoke("navigation:load-chrome", url),
+    loadCodeChef: () => ipcRenderer.invoke("navigation:load-codechef"),
+    endProcess: processName => ipcRenderer.invoke("system:end-process", processName),
+    exitApp: () => ipcRenderer.invoke("application:exit"),
+    runSecurityChecks: () => ipcRenderer.invoke("security:run-checks"),
+    startExam: () => ipcRenderer.invoke("exam:start"),
+    getExamState: () => ipcRenderer.invoke("exam:state"),
+    finishExam: () => ipcRenderer.invoke("exam:finish"),
+    exitExam: () => ipcRenderer.invoke("application:exit"),
+    getSystemInfo: () => ipcRenderer.invoke("system:get-info"),
+    getDisplayInfo: () => ipcRenderer.invoke("display:get-info"),
+    closeChrome: () => ipcRenderer.invoke("system:close-chrome"),
+
+    onSecurityEvent: callback => {
+        const listener = (event, data) => callback(data);
+
+        ipcRenderer.on("security-event", listener);
+
+        return () => {
+            ipcRenderer.removeListener("security-event", listener);
+        };
+    }
+});
