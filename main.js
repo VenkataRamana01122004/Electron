@@ -7,10 +7,13 @@ const { getDisplayInformation } = require("./security/displayMonitor");
 const { getSystemInformation } = require("./security/systemInfo");
 const { runSecurityChecks } = require("./security/securityCheck");
 const { setExamRunning, isExamRunning, endExam } = require("./services/examState");
+const {
+    getBackgroundApplications
+} = require("./security/backgroundApplications");
 
 const EXAM_DURATION_MS = 0.5 * 60 * 1000;
-const ExamportalURL = "https://www.codechef.com/";
-// const ExamportalURL = "http://localhost:5173/";
+// const ExamportalURL = "https://www.codechef.com/";
+const ExamportalURL = "http://localhost:5173/";
 const SECURITY_PAGE = path.join(__dirname, "pages", "security-check.html");
 
 let mainWindow = null;
@@ -550,6 +553,40 @@ ipcMain.handle(
 
         }
 
+    }
+);
+
+ipcMain.handle(
+    "background-applications:get",
+    async () => {
+
+        try {
+
+            return await getBackgroundApplications();
+
+        } catch (error) {
+
+            console.error(
+                "Background application error:",
+                error
+            );
+
+
+            return {
+
+                success:
+                    false,
+
+                count:
+                    0,
+
+                applications:
+                    [],
+
+                error:
+                    error.message
+            };
+        }
     }
 );
 

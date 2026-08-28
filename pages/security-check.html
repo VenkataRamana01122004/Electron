@@ -1035,6 +1035,15 @@ async function runSecurityChecks() {
             response
         );
 
+const backgroundResult =
+    await window.electronAPI
+        .getBackgroundApplications();
+
+console.log(
+    "Background applications:hello",
+    backgroundResult.applications
+);
+
 
         if (
             !response ||

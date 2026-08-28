@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getSystemInfo: () => ipcRenderer.invoke("system:get-info"),
     getDisplayInfo: () => ipcRenderer.invoke("display:get-info"),
     closeChrome: () => ipcRenderer.invoke("system:close-chrome"),
+    getBackgroundApplications: () => ipcRenderer.invoke("background-applications:get"),
 
     onSecurityEvent: callback => {
         const listener = (event, data) => callback(data);
