@@ -26,6 +26,7 @@ let examLocked = false;
 
 let returningToSecurity = false;
 let handlingApplicationSwitch = false;
+let navigatingToExamPortal = false;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -111,8 +112,13 @@ mainWindow.on("blur", async () => {
 
     if (
         returningToSecurity ||
-        handlingApplicationSwitch
+        handlingApplicationSwitch ||
+        navigatingToExamPortal
     ) {
+        return;
+    }
+
+    if (!isExamRunning()) {
         return;
     }
 
@@ -130,121 +136,14 @@ mainWindow.on("blur", async () => {
     );
 
 
-    /*
-    Security checks must be passed again
-    after switching away.
-    */
-
-    securityCheckPassed = false;
-
-
     sendSecurityEvent({
         type: "APPLICATION_SWITCH",
         count: altTabCount,
         timestamp: Date.now()
     });
 
-
-    /*
-    Prevent duplicate blur events.
-    */
-
-    handlingApplicationSwitch = true;
-    returningToSecurity = true;
-
-
-    try {
-
-        if (
-            !mainWindow ||
-            mainWindow.isDestroyed()
-        ) {
-            return;
-        }
-
-
-        /*
-        ==========================================
-        RETURN TO SECURITY CHECK PAGE
-        ==========================================
-        */
-
-        console.log(
-            "Returning to security check page..."
-        );
-
-
-        await mainWindow.loadFile(
-            SECURITY_PAGE
-        );
-
-
-        console.log(
-            "Security check page loaded."
-        );
-
-
-        /*
-        ==========================================
-        RESTORE KIOSK
-        ==========================================
-        */
-
-        if (
-            mainWindow &&
-            !mainWindow.isDestroyed()
-        ) {
-
-            mainWindow.setKiosk(true);
-
-            mainWindow.setFullScreen(true);
-
-            mainWindow.setAlwaysOnTop(
-                true,
-                "screen-saver"
-            );
-
-            mainWindow.focus();
-
-        }
-
-
-        /*
-        ==========================================
-        LOCK AT 3 OR MORE
-        ==========================================
-        */
-
-        if (altTabCount >= 3) {
-
-            lockExam(
-                "Maximum application switches exceeded"
-            );
-
-        }
-
-    } catch (error) {
-
-        /*
-        Ignore navigation errors caused by
-        Electron shutting down.
-        */
-
-        if (!isQuitting) {
-
-            console.error(
-                "Failed to return to security page:",
-                error
-            );
-
-        }
-
-    } finally {
-
-        returningToSecurity = false;
-
-        handlingApplicationSwitch = false;
-
+    if (altTabCount >= 3) {
+        lockExam("Maximum application switches exceeded");
     }
 
 });
@@ -612,6 +511,7 @@ ipcMain.handle("navigation:load-codechef", async () => {
     }
 
     try {
+        navigatingToExamPortal = true;
         console.log("Loading CodeChef...");
         await mainWindow.loadURL(ExamportalURL);
         console.log("CodeChef loaded.");
@@ -627,6 +527,8 @@ ipcMain.handle("navigation:load-codechef", async () => {
             success: false,
             message: error.message
         };
+    } finally {
+        navigatingToExamPortal = false;
     }
 });
 
@@ -877,6 +779,11 @@ ipcMain.handle("exam:state", async () => {
     return {
         running: isExamRunning()
     };
+});
+
+ipcMain.handle("exam:stop", async () => {
+    endExam();
+    return { success: true };
 });
 
 ipcMain.handle("system:get-info", async () => {

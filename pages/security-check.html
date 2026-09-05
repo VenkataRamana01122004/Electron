@@ -3,666 +3,1134 @@
 
 <head>
     <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Exam Security Check</title>
+    <title>Exam Security Check</title>
 
-<style>
-* {
-    box-sizing: border-box;
-}
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-:root {
-    --primary: #4f46e5;
-    --primary-dark: #4338ca;
-    --success: #16a34a;
-    --success-bg: #ecfdf5;
-    --danger: #dc2626;
-    --danger-bg: #fef2f2;
-    --text: #111827;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --background: #f5f7fb;
-}
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --success: #16a34a;
+            --success-bg: #ecfdf5;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --background: #f5f7fb;
+        }
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    padding: 30px 16px;
-    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    color: var(--text);
-    background:
-        radial-gradient(circle at 15% 10%, rgba(79, 70, 229, 0.08), transparent 30%),
-        radial-gradient(circle at 85% 90%, rgba(59, 130, 246, 0.07), transparent 30%),
-        var(--background);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 30px 16px;
+            font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 10%, rgba(79, 70, 229, 0.08), transparent 30%),
+                radial-gradient(circle at 85% 90%, rgba(59, 130, 246, 0.07), transparent 30%),
+                var(--background);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.container {
-    width: 100%;
-    max-width: 780px;
-    padding: 34px;
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    border-radius: 24px;
-    box-shadow:
-        0 25px 60px rgba(15, 23, 42, 0.10),
-        0 4px 15px rgba(15, 23, 42, 0.04);
-}
+        .container {
+            width: 100%;
+            max-width: 780px;
+            padding: 34px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            box-shadow:
+                0 25px 60px rgba(15, 23, 42, 0.10),
+                0 4px 15px rgba(15, 23, 42, 0.04);
+        }
 
-.header {
-    text-align: center;
-    margin-bottom: 30px;
-}
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-.header-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    margin-bottom: 14px;
-    padding: 7px 12px;
-    border-radius: 999px;
-    background: #eef2ff;
-    color: var(--primary);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 14px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
 
-.header-badge::before {
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #22c55e;
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
-}
+        .header-badge::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+        }
 
-.header h1 {
-    margin: 0 0 9px;
-    font-size: 30px;
-    line-height: 1.2;
-    font-weight: 800;
-    letter-spacing: -0.025em;
-    color: #111827;
-}
+        .header h1 {
+            margin: 0 0 9px;
+            font-size: 30px;
+            line-height: 1.2;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: #111827;
+        }
 
-.header p {
-    max-width: 500px;
-    margin: 0 auto;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--muted);
-}
+        .header p {
+            max-width: 500px;
+            margin: 0 auto;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--muted);
+        }
 
-#checks {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+        #checks {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-.check {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 17px 18px;
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 15px;
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
+        .check {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 17px 18px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
 
-.check:hover {
-    transform: translateY(-1px);
-    border-color: #cfd3dc;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
-}
+        .check:hover {
+            transform: translateY(-1px);
+            border-color: #cfd3dc;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+        }
 
-.check::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 14px;
-    bottom: 14px;
-    width: 3px;
-    border-radius: 0 5px 5px 0;
-    background: #e5e7eb;
-}
+        .check::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 14px;
+            bottom: 14px;
+            width: 3px;
+            border-radius: 0 5px 5px 0;
+            background: #e5e7eb;
+        }
 
-.icon {
-    width: 46px;
-    height: 46px;
-    min-width: 46px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 13px;
-    background: #f5f7ff;
-    border: 1px solid #e8eaff;
-    font-size: 20px;
-}
+        .icon {
+            width: 46px;
+            height: 46px;
+            min-width: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            background: #f5f7ff;
+            border: 1px solid #e8eaff;
+            font-size: 20px;
+        }
 
-.info {
-    flex: 1;
-    min-width: 0;
-}
+        .info {
+            flex: 1;
+            min-width: 0;
+        }
 
-.name {
-    font-size: 14px;
-    line-height: 1.4;
-    font-weight: 750;
-    color: #111827;
-}
+        .name {
+            font-size: 14px;
+            line-height: 1.4;
+            font-weight: 750;
+            color: #111827;
+        }
 
-.message {
-    margin-top: 4px;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--muted);
-    word-break: break-word;
-}
+        .message {
+            margin-top: 4px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--muted);
+            word-break: break-word;
+        }
 
-.status {
-    width: 42px;
-    min-width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: #f8fafc;
-}
+        .status {
+            width: 42px;
+            min-width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f8fafc;
+        }
 
-.status.pass {
-    color: var(--success);
-    font-size: 23px;
-    font-weight: 800;
-    background: var(--success-bg);
-}
+        .status.pass {
+            color: var(--success);
+            font-size: 23px;
+            font-weight: 800;
+            background: var(--success-bg);
+        }
 
-.status.fail {
-    color: var(--danger);
-    font-size: 23px;
-    font-weight: 800;
-    background: var(--danger-bg);
-}
+        .status.fail {
+            color: var(--danger);
+            font-size: 23px;
+            font-weight: 800;
+            background: var(--danger-bg);
+        }
 
-.status.pending {
-    color: var(--muted);
-}
+        .status.pending {
+            color: var(--muted);
+        }
 
-.spinner {
-    width: 21px;
-    height: 21px;
-    border: 2.5px solid #e5e7eb;
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
+        .spinner {
+            width: 21px;
+            height: 21px;
+            border: 2.5px solid #e5e7eb;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
 
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
 
-.process-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    margin-top: 9px;
-}
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-.end-task-button {
-    border: 1px solid #fecdd3;
-    padding: 7px 12px;
-    border-radius: 7px;
-    background: #fff1f2;
-    color: #be123c;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
-}
+        .process-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 9px;
+        }
 
-.end-task-button:hover {
-    background: #ffe4e6;
-    color: #9f1239;
-}
+        .end-task-button {
+            border: 1px solid #fecdd3;
+            padding: 7px 12px;
+            border-radius: 7px;
+            background: #fff1f2;
+            color: #be123c;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
 
-.end-task-button:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
+        .end-task-button:hover {
+            background: #ffe4e6;
+            color: #9f1239;
+        }
 
-#result {
-    margin-top: 22px;
-    padding: 15px 17px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.5;
-    border-radius: 12px;
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    color: #475569;
-}
+        .end-task-button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
 
-#result.success {
-    background: var(--success-bg);
-    color: #166534;
-    border-color: #bbf7d0;
-}
+        #result {
+            margin-top: 22px;
+            padding: 15px 17px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.5;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            color: #475569;
+        }
 
-#result.failure {
-    background: var(--danger-bg);
-    color: #991b1b;
-    border-color: #fecaca;
-}
+        #result.success {
+            background: var(--success-bg);
+            color: #166534;
+            border-color: #bbf7d0;
+        }
 
-#result.running {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border-color: #bfdbfe;
-}
+        #result.failure {
+            background: var(--danger-bg);
+            color: #991b1b;
+            border-color: #fecaca;
+        }
 
-#continueButton {
-    width: 100%;
-    margin-top: 14px;
-    padding: 14px 18px;
-    border: none;
-    border-radius: 11px;
-    background: linear-gradient(135deg, var(--primary), #6366f1);
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 750;
-    cursor: pointer;
-    box-shadow: 0 7px 18px rgba(79, 70, 229, 0.22);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+        #result.running {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
 
-#continueButton:hover:not(:disabled) {
-    transform: translateY(-1px);
-    background: linear-gradient(135deg, var(--primary-dark), #4f46e5);
-    box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
-}
+        #continueButton {
+            width: 100%;
+            margin-top: 14px;
+            padding: 14px 18px;
+            border: none;
+            border-radius: 11px;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 750;
+            cursor: pointer;
+            box-shadow: 0 7px 18px rgba(79, 70, 229, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-#continueButton:disabled {
-    background: #cbd5e1;
-    color: #ffffff;
-    box-shadow: none;
-    cursor: not-allowed;
-}
+        #continueButton:hover:not(:disabled) {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, var(--primary-dark), #4f46e5);
+            box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28);
+        }
 
-#continueButton.locked {
-    background: linear-gradient(135deg, #dc2626, #ef4444);
-    color: #fff;
-    opacity: 0.85;
-    box-shadow: none;
-    cursor: not-allowed;
-}
+        #continueButton:disabled {
+            background: #cbd5e1;
+            color: #ffffff;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
 
-.loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    margin-top: 13px;
-    font-size: 11px;
-    color: #94a3b8;
-}
+        #continueButton.locked {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: #fff;
+            opacity: 0.85;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
 
-.loading::before {
-    content: "🔒";
-    font-size: 11px;
-}
+        #exitButton {
+            width: 100%;
+            margin-top: 10px;
+            padding: 11px 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 11px;
+            background: #ffffff;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
 
-@media (max-width: 650px) {
-    body {
-        padding: 15px;
-        align-items: flex-start;
-    }
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            margin-top: 13px;
+            font-size: 11px;
+            color: #94a3b8;
+        }
 
-    .container {
-        margin: 10px 0;
-        padding: 23px 18px;
-        border-radius: 19px;
-    }
+        .loading::before {
+            content: "🔒";
+            font-size: 11px;
+        }
 
-    .header {
-        margin-bottom: 24px;
-    }
+        @media (max-width: 650px) {
+            body {
+                padding: 15px;
+                align-items: flex-start;
+            }
 
-    .header h1 {
-        font-size: 24px;
-    }
+            .container {
+                margin: 10px 0;
+                padding: 23px 18px;
+                border-radius: 19px;
+            }
 
-    .header p {
-        font-size: 13px;
-    }
+            .header {
+                margin-bottom: 24px;
+            }
 
-    .check {
-        gap: 11px;
-        padding: 14px;
-    }
+            .header h1 {
+                font-size: 24px;
+            }
 
-    .icon {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        border-radius: 11px;
-        font-size: 18px;
-    }
+            .header p {
+                font-size: 13px;
+            }
 
-    .name {
-        font-size: 13px;
-    }
+            .check {
+                gap: 11px;
+                padding: 14px;
+            }
 
-    .message {
-        font-size: 12px;
-    }
+            .icon {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                border-radius: 11px;
+                font-size: 18px;
+            }
 
-    .status {
-        width: 35px;
-        min-width: 35px;
-        height: 35px;
-    }
-}
+            .name {
+                font-size: 13px;
+            }
 
-@media (max-width: 400px) {
-    .container {
-        padding: 20px 14px;
-    }
+            .message {
+                font-size: 12px;
+            }
 
-    .check {
-        padding: 13px 11px;
-    }
+            .status {
+                width: 35px;
+                min-width: 35px;
+                height: 35px;
+            }
+        }
 
-    .icon {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        font-size: 16px;
-    }
+        @media (max-width: 400px) {
+            .container {
+                padding: 20px 14px;
+            }
 
-    .status {
-        width: 32px;
-        min-width: 32px;
-        height: 32px;
-    }
-}
-</style>
+            .check {
+                padding: 13px 11px;
+            }
+
+            .icon {
+                width: 36px;
+                min-width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .status {
+                width: 32px;
+                min-width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
 
 </head>
 
 
 <body>
 
-<div class="container">
-    <div class="header">
-        <div class="header-badge">Secure Environment</div>
-        <h1>Exam Security Check</h1>
-        <p>Please wait while we verify your device and exam environment.</p>
+    <div class="container">
+        <div class="header">
+            <div class="header-badge">Secure Environment</div>
+            <h1>Exam Security Check</h1>
+            <p>Please wait while we verify your device and exam environment.</p>
+        </div>
+
+        <div id="checks">
+            <div class="check" id="system-check">
+                <div class="icon">⚙️</div>
+                <div class="info">
+                    <div class="name">System Check</div>
+                    <div class="message" id="system-message">Checking your system...</div>
+                </div>
+                <div class="status pending" id="system-status">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <div class="check" id="display-check">
+                <div class="icon">🖥️</div>
+                <div class="info">
+                    <div class="name">Display / Monitor Check</div>
+                    <div class="message" id="display-message">Checking display configuration...</div>
+                </div>
+                <div class="status pending" id="display-status">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <div class="check" id="camera-check">
+                <div class="icon">📷</div>
+                <div class="info">
+                    <div class="name">Camera Check</div>
+                    <div class="message" id="camera-message">Checking camera access...</div>
+                </div>
+                <div class="status pending" id="camera-status">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <div class="check" id="process-check">
+                <div class="icon">⚙️</div>
+                <div class="info">
+                    <div class="name">Background Application Check</div>
+                    <div class="message" id="process-message">Checking running applications...</div>
+                    <div class="process-actions" id="process-actions"></div>
+                </div>
+                <div class="status pending" id="process-status">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <div class="check" id="screenShare-check">
+                <div class="icon">📺</div>
+                <div class="info">
+                    <div class="name">Screen Sharing Check</div>
+                    <div class="message" id="screenShare-message">Checking screen sharing status...</div>
+                </div>
+                <div class="status pending" id="screenShare-status">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="result" class="result running">Running security checks...</div>
+
+        <button id="continueButton" disabled>
+            Continue to Login
+        </button>
+
+        <button id="exitButton" type="button">Exit Application</button>
+
+        <div class="loading">
+            All security checks must pass before continuing.
+        </div>
     </div>
 
-    <div id="checks">
-        <div class="check" id="system-check">
-            <div class="icon">⚙️</div>
-            <div class="info">
-                <div class="name">System Check</div>
-                <div class="message" id="system-message">Checking your system...</div>
-            </div>
-            <div class="status pending" id="system-status">
-                <div class="spinner"></div>
-            </div>
-        </div>
 
-        <div class="check" id="display-check">
-            <div class="icon">🖥️</div>
-            <div class="info">
-                <div class="name">Display / Monitor Check</div>
-                <div class="message" id="display-message">Checking display configuration...</div>
-            </div>
-            <div class="status pending" id="display-status">
-                <div class="spinner"></div>
-            </div>
-        </div>
-
-        <div class="check" id="camera-check">
-            <div class="icon">📷</div>
-            <div class="info">
-                <div class="name">Camera Check</div>
-                <div class="message" id="camera-message">Checking camera access...</div>
-            </div>
-            <div class="status pending" id="camera-status">
-                <div class="spinner"></div>
-            </div>
-        </div>
-
-        <div class="check" id="process-check">
-            <div class="icon">⚙️</div>
-            <div class="info">
-                <div class="name">Background Application Check</div>
-                <div class="message" id="process-message">Checking running applications...</div>
-                <div class="process-actions" id="process-actions"></div>
-            </div>
-            <div class="status pending" id="process-status">
-                <div class="spinner"></div>
-            </div>
-        </div>
-
-        <div class="check" id="screenShare-check">
-            <div class="icon">📺</div>
-            <div class="info">
-                <div class="name">Screen Sharing Check</div>
-                <div class="message" id="screenShare-message">Checking screen sharing status...</div>
-            </div>
-            <div class="status pending" id="screenShare-status">
-                <div class="spinner"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="result" class="result running">Running security checks...</div>
-
-    <button id="continueButton" disabled>
-        Continue to Login
-    </button>
-
-    <div class="loading">
-        All security checks must pass before continuing.
-    </div>
-</div>
+    <script>
 
 
-<script>
+        /*
+        ==================================================
+        SECURITY STATE
+        ==================================================
+        */
+
+        let securityCheckRunning = false;
+
+        let securityCheckPassed = false;
+
+        /*
+            IMPORTANT:
+            Once true, the Continue button can NEVER
+            be enabled again during this page session.
+        */
+        let examLocked = false;
 
 
-/*
-==================================================
-SECURITY STATE
-==================================================
-*/
+        /*
+        ==================================================
+        DOM ELEMENTS
+        ==================================================
+        */
 
-let securityCheckRunning = false;
+        const continueButton =
+            document.getElementById("continueButton");
 
-let securityCheckPassed = false;
+        const resultElement =
+            document.getElementById("result");
 
-/*
-    IMPORTANT:
-    Once true, the Continue button can NEVER
-    be enabled again during this page session.
-*/
-let examLocked = false;
+        const exitButton =
+            document.getElementById("exitButton");
 
-
-/*
-==================================================
-DOM ELEMENTS
-==================================================
-*/
-
-const continueButton =
-    document.getElementById("continueButton");
-
-const resultElement =
-    document.getElementById("result");
+        exitButton.addEventListener("click", async () => {
+            exitButton.disabled = true;
+            exitButton.textContent = "Exiting...";
+            await window.electronAPI.exitApp();
+        });
 
 
-/*
-==================================================
-UPDATE CHECK UI
-==================================================
-*/
+        /*
+        ==================================================
+        UPDATE CHECK UI
+        ==================================================
+        */
 
-function updateCheckUI(
-    id,
-    passed,
-    message
-) {
+        function updateCheckUI(
+            id,
+            passed,
+            message
+        ) {
 
-    const messageElement =
-        document.getElementById(
-            `${id}-message`
-        );
+            const messageElement =
+                document.getElementById(
+                    `${id}-message`
+                );
 
-    const statusElement =
-        document.getElementById(
-            `${id}-status`
-        );
-
-
-    if (
-        !messageElement ||
-        !statusElement
-    ) {
-        return;
-    }
+            const statusElement =
+                document.getElementById(
+                    `${id}-status`
+                );
 
 
-    messageElement.textContent =
-        message;
+            if (
+                !messageElement ||
+                !statusElement
+            ) {
+                return;
+            }
 
 
-    statusElement.className =
-        passed
-            ? "status pass"
-            : "status fail";
+            messageElement.textContent =
+                message;
 
 
-    statusElement.innerHTML =
-        passed
-            ? "✓"
-            : "✗";
-}
+            statusElement.className =
+                passed
+                    ? "status pass"
+                    : "status fail";
 
 
-/*
-==================================================
-CLEAR PROCESS ACTIONS
-==================================================
-*/
-
-function clearProcessActions() {
-
-    const actions =
-        document.getElementById(
-            "process-actions"
-        );
+            statusElement.innerHTML =
+                passed
+                    ? "✓"
+                    : "✗";
+        }
 
 
-    if (actions) {
+        /*
+        ==================================================
+        CLEAR PROCESS ACTIONS
+        ==================================================
+        */
 
-        actions.innerHTML = "";
+        function clearProcessActions() {
 
-    }
-
-}
-
-
-/*
-==================================================
-CREATE END TASK BUTTON
-==================================================
-*/
-
-function createEndTaskButton(
-    processName
-) {
-
-    const button =
-        document.createElement("button");
+            const actions =
+                document.getElementById(
+                    "process-actions"
+                );
 
 
-    button.className =
-        "end-task-button";
+            if (actions) {
+
+                actions.innerHTML = "";
+
+            }
+
+        }
 
 
-    button.textContent =
-        `End Task (${processName})`;
+        /*
+        ==================================================
+        CREATE END TASK BUTTON
+        ==================================================
+        */
+
+        function createEndTaskButton(
+            processName
+        ) {
+
+            const button =
+                document.createElement("button");
 
 
-    button.addEventListener(
-        "click",
-        async () => {
-
-            button.disabled = true;
+            button.className =
+                "end-task-button";
 
 
             button.textContent =
-                `Ending ${processName}...`;
+                `End Task (${processName})`;
+
+
+            button.addEventListener(
+                "click",
+                async () => {
+
+                    button.disabled = true;
+
+
+                    button.textContent =
+                        `Ending ${processName}...`;
+
+
+                    try {
+
+                        const response =
+                            await window.electronAPI
+                                .endProcess(processName);
+
+
+                        if (
+                            response?.success
+                        ) {
+
+                            button.textContent =
+                                `${processName} Ended ✓`;
+
+
+                            setTimeout(
+                                () => {
+
+                                    if (!examLocked) {
+
+                                        runSecurityChecks();
+
+                                    }
+
+                                },
+                                1000
+                            );
+
+
+                        } else {
+
+                            button.disabled =
+                                false;
+
+
+                            button.textContent =
+                                `End Task (${processName})`;
+
+
+                            alert(
+                                response?.message ||
+                                `Unable to end ${processName}.`
+                            );
+
+                        }
+
+
+                    } catch (error) {
+
+                        console.error(
+                            "End process error:",
+                            error
+                        );
+
+
+                        button.disabled =
+                            false;
+
+
+                        button.textContent =
+                            `End Task (${processName})`;
+
+
+                        alert(
+                            "Unable to end the application."
+                        );
+
+                    }
+
+                }
+            );
+
+
+            return button;
+        }
+
+
+        /*
+        ==================================================
+        SHOW PROCESS ACTIONS
+        ==================================================
+        */
+
+        function showProcessActions(
+            processes
+        ) {
+
+            const actions =
+                document.getElementById(
+                    "process-actions"
+                );
+
+
+            if (!actions) {
+                return;
+            }
+
+
+            actions.innerHTML = "";
+
+
+            if (
+                !Array.isArray(processes) ||
+                processes.length === 0
+            ) {
+
+                return;
+
+            }
+
+
+            const uniqueNames = [
+                ...new Set(
+                    processes.map(
+                        process =>
+                            String(
+                                process.name
+                            ).toLowerCase()
+                    )
+                )
+            ];
+
+
+            uniqueNames.forEach(
+                processName => {
+
+                    actions.appendChild(
+                        createEndTaskButton(
+                            processName
+                        )
+                    );
+
+                }
+            );
+
+        }
+
+
+        /*
+        ==================================================
+        UPDATE RESULTS
+        ==================================================
+        */
+
+        function updateResults(
+            results
+        ) {
+
+            clearProcessActions();
+
+
+            if (
+                !Array.isArray(results)
+            ) {
+
+                return;
+
+            }
+
+
+            results.forEach(
+                check => {
+
+                    updateCheckUI(
+
+                        check.id,
+
+                        check.passed === true,
+
+                        check.message ||
+                        "No information available."
+
+                    );
+
+
+                    if (
+                        check.id === "process" &&
+                        check.passed === false &&
+                        check.details
+                    ) {
+
+                        showProcessActions(
+                            check.details.processes
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /*
+        ==================================================
+        LOCK EXAM
+        ==================================================
+        */
+
+        function lockExamUI(
+            reason
+        ) {
+
+            /*
+                Prevent this function from
+                being applied repeatedly.
+            */
+
+            if (examLocked) {
+                return;
+            }
+
+
+            examLocked = true;
+
+
+            securityCheckPassed =
+                false;
+
+
+            /*
+                Disable button
+            */
+
+            continueButton.disabled =
+                true;
+
+
+            /*
+                Change button appearance
+            */
+
+            continueButton.textContent =
+                "Exam Locked";
+
+
+            continueButton.classList.add(
+                "locked"
+            );
+
+
+            continueButton.style.background =
+                "#dc2626";
+
+
+            continueButton.style.opacity =
+                "0.8";
+
+
+            continueButton.style.cursor =
+                "not-allowed";
+
+
+            /*
+                Prevent normal click
+            */
+
+            continueButton.onclick =
+                null;
+
+
+            /*
+                Show locked message
+            */
+
+            resultElement.className =
+                "result failure";
+
+
+            resultElement.textContent =
+                "✗ Exam locked due to a security violation.";
+
+
+            console.log(
+                "===================================="
+            );
+
+            console.log(
+                "EXAM LOCKED"
+            );
+
+            console.log(
+                "Reason:",
+                reason
+            );
+
+            console.log(
+                "===================================="
+            );
+
+        }
+
+
+        /*
+        ==================================================
+        RUN SECURITY CHECKS
+        ==================================================
+        */
+
+        async function runSecurityChecks() {
+
+            /*
+                Never run checks after the exam
+                has been locked.
+            */
+
+            if (examLocked) {
+
+                console.log(
+                    "Security checks blocked - exam locked."
+                );
+
+                return;
+
+            }
+
+
+            if (
+                securityCheckPassed &&
+                !examLocked
+            ) {
+
+                return;
+
+            }
+
+
+            securityCheckRunning =
+                true;
+
+
+            securityCheckPassed =
+                false;
+
+
+            continueButton.disabled =
+                true;
+
+
+            resultElement.className =
+                "result running";
+
+
+            resultElement.textContent =
+                "Running security checks...";
+
+
+            const checkIds = [
+
+                "system",
+
+                "display",
+
+                "camera",
+
+                "process",
+
+                "screenShare"
+
+            ];
+
+
+            checkIds.forEach(
+                id => {
+
+                    const message =
+                        document.getElementById(
+                            `${id}-message`
+                        );
+
+
+                    const status =
+                        document.getElementById(
+                            `${id}-status`
+                        );
+
+
+                    if (message) {
+
+                        message.textContent =
+                            "Checking...";
+
+                    }
+
+
+                    if (status) {
+
+                        status.className =
+                            "status pending";
+
+
+                        status.innerHTML =
+                            '<div class="spinner"></div>';
+
+                    }
+
+                }
+            );
+
+
+            clearProcessActions();
 
 
             try {
 
                 const response =
                     await window.electronAPI
-                        .endProcess(processName);
+                        .runSecurityChecks();
+
+
+                console.log(
+                    "Security check response:",
+                    response
+                );
 
 
                 if (
-                    response?.success
+                    !response ||
+                    !Array.isArray(
+                        response.results
+                    )
                 ) {
 
-                    button.textContent =
-                        `${processName} Ended ✓`;
-
-
-                    setTimeout(
-                        () => {
-
-                            if (!examLocked) {
-
-                                runSecurityChecks();
-
-                            }
-
-                        },
-                        1000
+                    throw new Error(
+                        "Invalid security check response."
                     );
+
+                }
+
+
+                updateResults(
+                    response.results
+                );
+
+
+                /*
+                    Check again because the exam could
+                    have been locked while checks were
+                    running.
+                */
+
+                if (examLocked) {
+
+                    continueButton.disabled =
+                        true;
+
+                    return;
+
+                }
+
+
+                securityCheckPassed =
+                    response.passed === true;
+
+
+                if (
+                    securityCheckPassed &&
+                    !examLocked
+                ) {
+
+                    resultElement.className =
+                        "result success";
+
+
+                    resultElement.textContent =
+                        "✓ All security checks passed. You can continue to the login page.";
+
+
+                    continueButton.disabled =
+                        false;
 
 
                 } else {
 
-                    button.disabled =
-                        false;
+                    resultElement.className =
+                        "result failure";
 
 
-                    button.textContent =
-                        `End Task (${processName})`;
+                    resultElement.textContent =
+                        examLocked
+                            ? "✗ Exam locked due to a security violation."
+                            : "✗ Security checks failed. Please resolve the failed checks and try again.";
 
 
-                    alert(
-                        response?.message ||
-                        `Unable to end ${processName}.`
-                    );
+                    continueButton.disabled =
+                        true;
 
                 }
 
@@ -670,17 +1138,19 @@ function createEndTaskButton(
             } catch (error) {
 
                 console.error(
-                    "End process error:",
+                    "Security checks failed:",
                     error
                 );
 
 
-                button.disabled =
-                    false;
+                resultElement.className =
+                    "result failure";
 
 
-                button.textContent =
-                    `End Task (${processName})`;
+                resultElement.textContent =
+                    examLocked
+                        ? "✗ Exam locked due to a security violation."
+                        : "✗ Unable to complete security checks.";
 
 
                 alert(
@@ -1228,131 +1698,229 @@ continueButton.addEventListener(
             if (!examLocked) {
 
                 continueButton.disabled =
+                    true;
+
+
+            } finally {
+
+                securityCheckRunning =
                     false;
-
-
-                continueButton.textContent =
-                    "Continue to Login";
 
             }
 
-
-            alert(
-                error.message ||
-                "Unable to open the login page."
-            );
-
         }
 
-    }
-);
 
+        /*
+        ==================================================
+        CONTINUE TO LOGIN
+        ==================================================
+        */
 
-/*
-==================================================
-SECURITY EVENTS FROM MAIN PROCESS
-==================================================
-*/
+        continueButton.addEventListener(
+            "click",
+            async () => {
 
-if (
-    window.electronAPI &&
-    typeof window.electronAPI
-        .onSecurityEvent === "function"
-) {
+                /*
+                    Absolute protection against
+                    clicking after lock.
+                */
 
-   window.electronAPI.onSecurityEvent(event => {
+                if (examLocked) {
 
-    console.log(
-        "Security event:",
-        event
-    );
+                    console.log(
+                        "Continue blocked - exam locked."
+                    );
 
-
-    if (
-        event.type ===
-        "EXAM_LOCKED"
-    ) {
-
-        examLocked = true;
-
-        securityCheckPassed = false;
-
-
-        continueButton.disabled =
-            true;
-
-
-        continueButton.textContent =
-            "Exam Locked";
-
-
-        continueButton.classList.add(
-            "locked"
-        );
-
-
-        resultElement.className =
-            "result failure";
-
-
-        resultElement.textContent =
-            "✗ Exam locked due to a security violation.";
-
-
-        console.log(
-            "EXAM LOCKED:",
-            event.reason
-        );
-
-
-        return;
-
-    }
-
-
-    if (
-        event.type ===
-        "APPLICATION_SWITCH"
-    ) {
-
-        console.log(
-            `Application switch: ${event.count}/3`
-        );
-
-    }
-
-});
-
-}
-
-
-/*
-==================================================
-START SECURITY CHECKS
-==================================================
-*/
-
-window.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        setTimeout(
-            () => {
-
-                if (!examLocked) {
-
-                    runSecurityChecks();
+                    return;
 
                 }
 
-            },
-            500
+
+                if (!securityCheckPassed) {
+
+                    return;
+
+                }
+
+
+                continueButton.disabled =
+                    true;
+
+
+                continueButton.textContent =
+                    "Loading Login...";
+
+
+                try {
+
+                    const response =
+                        await window.electronAPI
+                            .loadCodeChef();
+
+
+                    if (
+                        response &&
+                        response.success === false
+                    ) {
+
+                        throw new Error(
+                            response.message ||
+                            "Unable to load login page."
+                        );
+
+                    }
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Login navigation error:",
+                        error
+                    );
+
+
+                    /*
+                        Do NOT restore the button
+                        if the exam has been locked.
+                    */
+
+                    if (!examLocked) {
+
+                        continueButton.disabled =
+                            false;
+
+
+                        continueButton.textContent =
+                            "Continue to Login";
+
+                    }
+
+
+                    alert(
+                        error.message ||
+                        "Unable to open the login page."
+                    );
+
+                }
+
+            }
         );
 
-    }
-);
 
-</script>
+        /*
+        ==================================================
+        SECURITY EVENTS FROM MAIN PROCESS
+        ==================================================
+        */
+
+        if (
+            window.electronAPI &&
+            typeof window.electronAPI
+                .onSecurityEvent === "function"
+        ) {
+
+            window.electronAPI.onSecurityEvent(event => {
+
+                console.log(
+                    "Security event:",
+                    event
+                );
+
+
+                if (
+                    event.type ===
+                    "EXAM_LOCKED"
+                ) {
+
+                    examLocked = true;
+
+                    securityCheckPassed = false;
+
+
+                    continueButton.disabled =
+                        true;
+
+
+                    continueButton.textContent =
+                        "Exam Locked";
+
+
+                    continueButton.classList.add(
+                        "locked"
+                    );
+
+
+                    resultElement.className =
+                        "result failure";
+
+
+                    resultElement.textContent =
+                        "✗ Exam locked due to a security violation.";
+
+
+                    console.log(
+                        "EXAM LOCKED:",
+                        event.reason
+                    );
+
+
+                    return;
+
+                }
+
+
+                if (
+                    event.type ===
+                    "APPLICATION_SWITCH"
+                ) {
+
+                    console.log(
+                        `Application switch: ${event.count}/3`
+                    );
+
+                    if (!examLocked) {
+                        resultElement.className = "result failure";
+                        resultElement.textContent =
+                            event.count >= 3
+                                ? "✗ Exam locked due to too many application switches."
+                                : `⚠ Application switch detected. ${3 - event.count} attempt(s) remaining.`;
+                    }
+
+                }
+
+            });
+
+        }
+
+
+        /*
+        ==================================================
+        START SECURITY CHECKS
+        ==================================================
+        */
+
+        window.addEventListener(
+            "DOMContentLoaded",
+            () => {
+
+                setTimeout(
+                    () => {
+
+                        if (!examLocked) {
+
+                            runSecurityChecks();
+
+                        }
+
+                    },
+                    500
+                );
+
+            }
+        );
+
+    </script>
 
 </body>
 

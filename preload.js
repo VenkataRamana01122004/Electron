@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     exitApp: () => ipcRenderer.invoke("application:exit"),
     runSecurityChecks: () => ipcRenderer.invoke("security:run-checks"),
     startExam: () => ipcRenderer.invoke("exam:start"),
+    stopExam: () => ipcRenderer.invoke("exam:stop"),
     getExamState: () => ipcRenderer.invoke("exam:state"),
     finishExam: () => ipcRenderer.invoke("exam:finish"),
     exitExam: () => ipcRenderer.invoke("application:exit"),
