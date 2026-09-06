@@ -85,6 +85,31 @@ function createWindow() {
         }
     });
 
+    const updateExitButtonForPage = (url) => {
+        try {
+            const parsedUrl = new URL(url);
+            const isSecurityPage = parsedUrl.protocol === "file:";
+            const pathname = parsedUrl.pathname.replace(/\/$/, "") || "/";
+            const isPortalEntry = pathname === "/" || pathname === "/login";
+
+            if (isSecurityPage || isPortalEntry) {
+                showExitButton();
+            } else {
+                hideExitButton();
+            }
+        } catch {
+            hideExitButton();
+        }
+    };
+
+    mainWindow.webContents.on("did-navigate", (_event, url) => {
+        updateExitButtonForPage(url);
+    });
+
+    mainWindow.webContents.on("did-navigate-in-page", (_event, url) => {
+        updateExitButtonForPage(url);
+    });
+
 
 mainWindow.on("blur", async () => {
 
@@ -284,6 +309,22 @@ exitBtn.addEventListener("click", async () => {
     exitWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(html));
     positionExitButton();
     exitWindow.setAlwaysOnTop(true, "screen-saver");
+    exitWindow.once("ready-to-show", showExitButton);
+    showExitButton();
+}
+
+function showExitButton() {
+    if (exitWindow && !exitWindow.isDestroyed()) {
+        exitWindow.show();
+        exitWindow.setAlwaysOnTop(true, "screen-saver");
+        positionExitButton();
+    }
+}
+
+function hideExitButton() {
+    if (exitWindow && !exitWindow.isDestroyed()) {
+        exitWindow.hide();
+    }
 }
 
 function lockExam(reason) {
@@ -511,6 +552,7 @@ ipcMain.handle("navigation:load-codechef", async () => {
     }
 
     try {
+        hideExitButton();
         navigatingToExamPortal = true;
         console.log("Loading CodeChef...");
         await mainWindow.loadURL(ExamportalURL);
@@ -522,6 +564,7 @@ ipcMain.handle("navigation:load-codechef", async () => {
         };
     } catch (error) {
         console.error("Unable to load CodeChef:", error);
+        showExitButton();
 
         return {
             success: false,
@@ -892,4 +935,14 @@ app.on("activate", () => {
         createWindow();
         setupWindowEvents();
     }
+});
+
+ipcMain.handle("navigation:show-exit", async () => {
+    showExitButton();
+    return { success: true };
+});
+
+ipcMain.handle("navigation:hide-exit", async () => {
+    hideExitButton();
+    return { success: true };
 });

@@ -310,19 +310,6 @@
             cursor: not-allowed;
         }
 
-        #exitButton {
-            width: 100%;
-            margin-top: 10px;
-            padding: 11px 18px;
-            border: 1px solid #cbd5e1;
-            border-radius: 11px;
-            background: #ffffff;
-            color: #475569;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
         .loading {
             display: flex;
             align-items: center;
@@ -490,8 +477,6 @@
             Continue to Login
         </button>
 
-        <button id="exitButton" type="button">Exit Application</button>
-
         <div class="loading">
             All security checks must pass before continuing.
         </div>
@@ -530,15 +515,6 @@
 
         const resultElement =
             document.getElementById("result");
-
-        const exitButton =
-            document.getElementById("exitButton");
-
-        exitButton.addEventListener("click", async () => {
-            exitButton.disabled = true;
-            exitButton.textContent = "Exiting...";
-            await window.electronAPI.exitApp();
-        });
 
 
         /*
