@@ -90,9 +90,7 @@ function createWindow() {
             const parsedUrl = new URL(url);
             const isSecurityPage = parsedUrl.protocol === "file:";
             const pathname = parsedUrl.pathname.replace(/\/$/, "") || "/";
-            const isPortalEntry = pathname === "/" || pathname === "/login";
-
-            if (isSecurityPage || isPortalEntry) {
+            if (isSecurityPage) {
                 showExitButton();
             } else {
                 hideExitButton();
