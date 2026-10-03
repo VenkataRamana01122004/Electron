@@ -14,6 +14,11 @@ const {
 const EXAM_DURATION_MS = 0.5 * 60 * 1000;
 // const ExamportalURL = "https://www.codechef.com/";
 const ExamportalURL = "http://localhost:5173/";
+const ROOM_VERIFICATION_PAGE = path.join(
+    __dirname,
+    "pages",
+    "room-verification.html"
+);
 const SECURITY_PAGE = path.join(__dirname, "pages", "security-check.html");
 
 let mainWindow = null;
@@ -61,7 +66,9 @@ function createWindow() {
     mainWindow.setKiosk(true);
     mainWindow.setFullScreen(true);
 
-    mainWindow.loadFile(SECURITY_PAGE);
+    // Open room verification first
+mainWindow.loadFile(ROOM_VERIFICATION_PAGE);
+    // mainWindow.loadFile(SECURITY_PAGE);
 
 
     mainWindow.webContents.setWindowOpenHandler(() => {
@@ -86,18 +93,20 @@ function createWindow() {
     });
 
     const updateExitButtonForPage = (url) => {
-        try {
-            const parsedUrl = new URL(url);
-            const isSecurityPage = parsedUrl.protocol === "file:";
-            const pathname = parsedUrl.pathname.replace(/\/$/, "") || "/";
-            if (isSecurityPage) {
-                showExitButton();
-            } else {
-                hideExitButton();
-            }
-        } catch {
-            hideExitButton();
-        }
+        if (isQuitting) return;
+         showExitButton();
+        // try {
+        //     const parsedUrl = new URL(url);
+        //     const isSecurityPage = parsedUrl.protocol === "file:";
+        //     const pathname = parsedUrl.pathname.replace(/\/$/, "") || "/";
+        //     if (isSecurityPage) {
+        //         showExitButton();
+        //     } else {
+        //         hideExitButton();
+        //     }
+        // } catch {
+        //     hideExitButton();
+        // }
     };
 
     mainWindow.webContents.on("did-navigate", (_event, url) => {
@@ -311,9 +320,25 @@ exitBtn.addEventListener("click", async () => {
     showExitButton();
 }
 
+// function showExitButton() {
+//     if (exitWindow && !exitWindow.isDestroyed()) {
+//         exitWindow.show();
+//         exitWindow.setAlwaysOnTop(true, "screen-saver");
+//         positionExitButton();
+//     }
+// }
+
 function showExitButton() {
-    if (exitWindow && !exitWindow.isDestroyed()) {
-        exitWindow.show();
+    if (
+        exitWindow &&
+        !exitWindow.isDestroyed() &&
+        mainWindow &&
+        !mainWindow.isDestroyed()
+    ) {
+        if (!exitWindow.isVisible()) {
+            exitWindow.showInactive();
+        }
+
         exitWindow.setAlwaysOnTop(true, "screen-saver");
         positionExitButton();
     }
@@ -386,6 +411,48 @@ function sendSecurityEvent(event) {
         mainWindow.webContents.send("security-event", event);
     }
 }
+
+ipcMain.handle("room-verification:complete", async (event) => {
+    if (
+        !mainWindow ||
+        mainWindow.isDestroyed() ||
+        event.sender !== mainWindow.webContents
+    ) {
+        return { success: false, message: "Invalid window" };
+    }
+
+    // Only accept the request from the room verification page
+    try {
+        const currentUrl = new URL(event.senderFrame.url);
+        const currentPage = path.basename(
+            decodeURIComponent(currentUrl.pathname)
+        );
+
+        if (currentPage !== "room-verification.html") {
+            return {
+                success: false,
+                message: "Invalid verification page"
+            };
+        }
+    } catch {
+        return { success: false, message: "Invalid page URL" };
+    }
+
+    roomVerificationPassed = true;
+
+    try {
+        await mainWindow.loadFile(SECURITY_PAGE);
+
+        return { success: true };
+    } catch (error) {
+        roomVerificationPassed = false;
+        console.error("Unable to load security page:", error);
+
+        return { success: false, message: error.message };
+    }
+});
+
+
 
 ipcMain.handle(
     "security:run-checks",
@@ -528,17 +595,68 @@ ipcMain.handle(
     }
 );
 
+// ipcMain.handle("navigation:load-codechef", async () => {
+//     if (
+//         !roomVerificationPassed ||
+//     !securityCheckPassed ||
+//     examLocked
+// ) {
+//         console.log("Security checks have not passed.");
+
+//         return {
+//             success: false,
+//             message: "Security checks must pass before opening Exam."
+//         };
+//     }
+
+//     if (!mainWindow || mainWindow.isDestroyed()) {
+//         return {
+//             success: false,
+//             message: "Main window is unavailable."
+//         };
+//     }
+
+//     try {
+//         navigatingToExamPortal = true;
+
+// // Keep the Exit Application button visible
+// showExitButton();
+
+// console.log("Loading Exam Portal...");
+// await mainWindow.loadURL(ExamportalURL);
+
+// // Show it again after navigation
+// showExitButton();
+
+// console.log("Exam Portal loaded.");
+
+//         return {
+//             success: true,
+//             url: ExamportalURL
+//         };
+//     } catch (error) {
+//         console.error("Unable to load CodeChef:", error);
+//         showExitButton();
+
+//         return {
+//             success: false,
+//             message: error.message
+//         };
+//     } finally {
+//         navigatingToExamPortal = false;
+//         showExitButton();
+//     }
+// });
+
 ipcMain.handle("navigation:load-codechef", async () => {
     if (
-    !securityCheckPassed ||
-    examLocked
-) {
-        console.log("CodeChef loading blocked.");
-        console.log("Security checks have not passed.");
-
+        !roomVerificationPassed ||
+        !securityCheckPassed ||
+        examLocked
+    ) {
         return {
             success: false,
-            message: "Security checks must pass before opening CodeChef."
+            message: "Security checks must pass before opening Exam"
         };
     }
 
@@ -550,18 +668,19 @@ ipcMain.handle("navigation:load-codechef", async () => {
     }
 
     try {
-        hideExitButton();
         navigatingToExamPortal = true;
-        console.log("Loading CodeChef...");
+        showExitButton();
+
         await mainWindow.loadURL(ExamportalURL);
-        console.log("CodeChef loaded.");
+
+        showExitButton();
+        navigatingToExamPortal = false;
 
         return {
             success: true,
             url: ExamportalURL
         };
     } catch (error) {
-        console.error("Unable to load CodeChef:", error);
         showExitButton();
 
         return {
@@ -570,6 +689,7 @@ ipcMain.handle("navigation:load-codechef", async () => {
         };
     } finally {
         navigatingToExamPortal = false;
+        showExitButton();
     }
 });
 
@@ -773,6 +893,49 @@ ipcMain.handle(
     }
 );
 
+// ipcMain.handle("exam:start", async () => {
+//     console.log("Exam started.");
+
+//     if (!securityCheckPassed) {
+//         console.log("Exam cannot start.");
+
+//         return {
+//             success: false,
+//             message: "Security checks have not passed."
+//         };
+//     }
+
+//     setExamRunning(true);
+
+//     if (examCloseTimer) {
+//         clearTimeout(examCloseTimer);
+//         examCloseTimer = null;
+//     }
+
+//     examCloseTimer = setTimeout(() => {
+//         console.log("Exam time expired.");
+
+//         isQuitting = true;
+//         endExam();
+//         stopProcessMonitoring();
+
+//         if (exitWindow && !exitWindow.isDestroyed()) {
+//             exitWindow.close();
+//         }
+
+//         if (mainWindow && !mainWindow.isDestroyed()) {
+//             mainWindow.close();
+//         }
+
+//         app.quit();
+//     }, EXAM_DURATION_MS);
+
+//     return {
+//         success: true,
+//         timestamp: Date.now()
+//     };
+// });
+
 ipcMain.handle("exam:start", async () => {
     console.log("Exam started.");
 
@@ -787,6 +950,9 @@ ipcMain.handle("exam:start", async () => {
 
     setExamRunning(true);
 
+    // Always show Exit Application when exam starts
+    showExitButton();
+
     if (examCloseTimer) {
         clearTimeout(examCloseTimer);
         examCloseTimer = null;
@@ -796,6 +962,7 @@ ipcMain.handle("exam:start", async () => {
         console.log("Exam time expired.");
 
         isQuitting = true;
+
         endExam();
         stopProcessMonitoring();
 
@@ -940,7 +1107,7 @@ ipcMain.handle("navigation:show-exit", async () => {
     return { success: true };
 });
 
-ipcMain.handle("navigation:hide-exit", async () => {
-    hideExitButton();
-    return { success: true };
-});
+// ipcMain.handle("navigation:hide-exit", async () => {
+//     hideExitButton();
+//     return { success: true };
+// });

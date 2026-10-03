@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Room Verification</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #1e293b;
+    }
+
+    .container {
+      background: white;
+      width: 100%;
+      max-width: 650px;
+      padding: 30px;
+      border-radius: 18px;
+      text-align: center;
+      box-shadow: 0 10px 35px #0f172a18;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    p {
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    video {
+      width: 100%;
+      background: #0f172a;
+      border-radius: 12px;
+      margin: 15px 0;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 9px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Room Verification</h1>
+    <p>
+      Before starting the exam, please show your
+      complete room using your camera.
+    </p>
+
+    <video id="camera" autoplay muted playsinline></video>
+
+    <p id="status" class="status">
+      Camera is not started.
+    </p>
+
+    <button id="start">Enable Camera</button>
+    <button id="complete" disabled>
+      Complete Room Scan
+    </button>
+  </div>
+
+  <script>
+    const video = document.getElementById("camera");
+    const status = document.getElementById("status");
+    const startBtn = document.getElementById("start");
+    const completeBtn = document.getElementById("complete");
+
+    let stream = null;
+
+    startBtn.addEventListener("click", async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+
+        video.srcObject = stream;
+        status.textContent =
+          "Slowly turn your camera to show your room.";
+        startBtn.disabled = true;
+        completeBtn.disabled = false;
+      } catch (err) {
+        status.textContent =
+          "Camera access failed. Check your permissions.";
+        status.className = "status error";
+      }
+    });
+
+    completeBtn.addEventListener("click", async () => {
+    stream?.getTracks().forEach(track => track.stop());
+    stream = null;
+
+    completeBtn.disabled = true;
+    status.textContent = "Continuing to security checks...";
+
+    try {
+        const result =
+            await window.electronAPI.completeRoomVerification();
+
+        if (!result.success) {
+            throw new Error(result.message);
+        }
+    } catch (error) {
+        status.textContent =
+            "Unable to continue. Please try again.";
+        status.className = "status error";
+        completeBtn.disabled = false;
+    }
+});
+
+    window.addEventListener("beforeunload", () => {
+      stream?.getTracks().forEach(track => track.stop());
+    });
+  </script>
+</body>
+</html>

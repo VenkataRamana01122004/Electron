@@ -4,7 +4,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     loadChrome: url => ipcRenderer.invoke("navigation:load-chrome", url),
     loadCodeChef: () => ipcRenderer.invoke("navigation:load-codechef"),
     showExitApp: () => ipcRenderer.invoke("navigation:show-exit"),
-    hideExitApp: () => ipcRenderer.invoke("navigation:hide-exit"),
+    // hideExitApp: () => ipcRenderer.invoke("navigation:hide-exit"),
     endProcess: processName => ipcRenderer.invoke("system:end-process", processName),
     exitApp: () => ipcRenderer.invoke("application:exit"),
     runSecurityChecks: () => ipcRenderer.invoke("security:run-checks"),
@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getDisplayInfo: () => ipcRenderer.invoke("display:get-info"),
     closeChrome: () => ipcRenderer.invoke("system:close-chrome"),
     getBackgroundApplications: () => ipcRenderer.invoke("background-applications:get"),
+    completeRoomVerification: () => ipcRenderer.invoke("room-verification:complete"),
 
     onSecurityEvent: callback => {
         const listener = (event, data) => callback(data);
