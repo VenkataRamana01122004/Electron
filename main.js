@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
+const fs = require("fs");
 const { execFile } = require("child_process");
 const path = require("path");
 
@@ -12,6 +13,7 @@ const {
 } = require("./security/backgroundApplications");
 
 const EXAM_DURATION_MS = 0.5 * 60 * 1000;
+const RECORDINGS_DIR = path.join(__dirname, "recordings");
 // const ExamportalURL = "https://www.codechef.com/";
 const ExamportalURL = "http://localhost:5173/";
 const ROOM_VERIFICATION_PAGE = path.join(
@@ -25,6 +27,7 @@ let mainWindow = null;
 let exitWindow = null;
 let examCloseTimer = null;
 let isQuitting = false;
+let roomVerificationPassed = false;
 let securityCheckPassed = false;
 let altTabCount = 0;
 let examLocked = false;
@@ -90,31 +93,6 @@ mainWindow.loadFile(ROOM_VERIFICATION_PAGE);
             console.error("Invalid navigation:", url);
             event.preventDefault();
         }
-    });
-
-    const updateExitButtonForPage = (url) => {
-        if (isQuitting) return;
-         showExitButton();
-        // try {
-        //     const parsedUrl = new URL(url);
-        //     const isSecurityPage = parsedUrl.protocol === "file:";
-        //     const pathname = parsedUrl.pathname.replace(/\/$/, "") || "/";
-        //     if (isSecurityPage) {
-        //         showExitButton();
-        //     } else {
-        //         hideExitButton();
-        //     }
-        // } catch {
-        //     hideExitButton();
-        // }
-    };
-
-    mainWindow.webContents.on("did-navigate", (_event, url) => {
-        updateExitButtonForPage(url);
-    });
-
-    mainWindow.webContents.on("did-navigate-in-page", (_event, url) => {
-        updateExitButtonForPage(url);
     });
 
 
@@ -576,6 +554,25 @@ ipcMain.handle(
                 error
             );
 
+            ipcMain.handle("recording:save", async (_event, recording) => {
+                if (!recording || typeof recording.data !== "string") {
+                    return { success: false, message: "Recording data is required." };
+                }
+
+                const safeName = String(recording.name || `recording-${Date.now()}.webm`)
+                    .replace(/[^a-zA-Z0-9._-]/g, "_");
+                const filePath = path.join(RECORDINGS_DIR, safeName);
+
+                try {
+                    fs.mkdirSync(RECORDINGS_DIR, { recursive: true });
+                    fs.writeFileSync(filePath, Buffer.from(recording.data, "base64"));
+                    return { success: true, filePath };
+                } catch (error) {
+                    console.error("Recording save error:", error);
+                    return { success: false, message: error.message };
+                }
+            });
+
 
             return {
 
@@ -755,6 +752,14 @@ ipcMain.handle("system:end-process", async (event, processName) => {
 ipcMain.handle(
     "application:exit",
     async () => {
+
+        if (isExamRunning()) {
+            hideExitButton();
+            return {
+                success: false,
+                message: "Exit is disabled while an exam is active."
+            };
+        }
 
         console.log(
             "===================================="
@@ -950,8 +955,8 @@ ipcMain.handle("exam:start", async () => {
 
     setExamRunning(true);
 
-    // Always show Exit Application when exam starts
-    showExitButton();
+    // The application cannot be exited while an exam is active.
+    hideExitButton();
 
     if (examCloseTimer) {
         clearTimeout(examCloseTimer);
@@ -1103,11 +1108,19 @@ app.on("activate", () => {
 });
 
 ipcMain.handle("navigation:show-exit", async () => {
+    if (isExamRunning()) {
+        hideExitButton();
+        return {
+            success: false,
+            message: "Exit is disabled while an exam is active."
+        };
+    }
+
     showExitButton();
     return { success: true };
 });
 
-// ipcMain.handle("navigation:hide-exit", async () => {
-//     hideExitButton();
-//     return { success: true };
-// });
+ipcMain.handle("navigation:hide-exit", async () => {
+    hideExitButton();
+    return { success: true };
+});
