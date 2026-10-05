@@ -326,6 +326,14 @@ function hideExitButton() {
     if (exitWindow && !exitWindow.isDestroyed()) {
         exitWindow.hide();
     }
+
+    // Hiding the always-on-top child can leave keyboard focus on that
+    // window, preventing text fields in the exam renderer from receiving
+    // input.
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.focus();
+        mainWindow.webContents.focus();
+    }
 }
 
 function lockExam(reason) {
@@ -554,26 +562,6 @@ ipcMain.handle(
                 error
             );
 
-            ipcMain.handle("recording:save", async (_event, recording) => {
-                if (!recording || typeof recording.data !== "string") {
-                    return { success: false, message: "Recording data is required." };
-                }
-
-                const safeName = String(recording.name || `recording-${Date.now()}.webm`)
-                    .replace(/[^a-zA-Z0-9._-]/g, "_");
-                const filePath = path.join(RECORDINGS_DIR, safeName);
-
-                try {
-                    fs.mkdirSync(RECORDINGS_DIR, { recursive: true });
-                    fs.writeFileSync(filePath, Buffer.from(recording.data, "base64"));
-                    return { success: true, filePath };
-                } catch (error) {
-                    console.error("Recording save error:", error);
-                    return { success: false, message: error.message };
-                }
-            });
-
-
             return {
 
                 success:
@@ -591,6 +579,25 @@ ipcMain.handle(
         }
     }
 );
+
+ipcMain.handle("recording:save", async (_event, recording) => {
+    if (!recording || typeof recording.data !== "string") {
+        return { success: false, message: "Recording data is required." };
+    }
+
+    const safeName = String(recording.name || `recording-${Date.now()}.webm`)
+        .replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = path.join(RECORDINGS_DIR, safeName);
+
+    try {
+        fs.mkdirSync(RECORDINGS_DIR, { recursive: true });
+        fs.writeFileSync(filePath, Buffer.from(recording.data, "base64"));
+        return { success: true, filePath };
+    } catch (error) {
+        console.error("Recording save error:", error);
+        return { success: false, message: error.message };
+    }
+});
 
 // ipcMain.handle("navigation:load-codechef", async () => {
 //     if (
