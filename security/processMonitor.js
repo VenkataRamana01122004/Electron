@@ -6,15 +6,22 @@ let mainWindow = null;
 
 const PROHIBITED_PROCESSES = [
     "chrome.exe",
-    "obs64.exe",
-    "obs.exe",
-    "teamviewer.exe",
-    "anydesk.exe",
-    "discord.exe",
-    "wireshark.exe",
-    "fiddler.exe",
-    "charles.exe",
-    "processhacker.exe"
+            "obs64.exe",
+            "obs.exe",
+            "teamviewer.exe",
+            "anydesk.exe",
+            "discord.exe",
+            "wireshark.exe",
+            "fiddler.exe",
+            "charles.exe",
+            "processhacker.exe",
+            "avica.exe",
+            "getscreen.exe",
+            "brave.exe",
+            "msedge.exe",
+            "ms-teams.exe",
+            "Teams.exe",
+            "msteams.exe"
 ];
 
 function normalizeName(name) {

@@ -707,17 +707,24 @@ ipcMain.handle("system:end-process", async (event, processName) => {
             return;
         }
 
-        const allowedProcesses = [
+           const allowedProcesses = [
             "chrome.exe",
-            "obs.exe",
             "obs64.exe",
+            "obs.exe",
             "teamviewer.exe",
             "anydesk.exe",
             "discord.exe",
             "wireshark.exe",
             "fiddler.exe",
             "charles.exe",
-            "processhacker.exe"
+            "processhacker.exe",
+            "avica.exe",
+            "getscreen.exe",
+            "brave.exe",
+            "msedge.exe",
+            "ms-teams.exe",
+            "Teams.exe",
+            "msteams.exe"
         ];
 
         const normalizedName = String(processName).toLowerCase().trim();
