@@ -1159,11 +1159,7 @@
 
             }
 
-        }
-    );
-
-
-    return button;
+        
 }
 
 
@@ -1626,96 +1622,6 @@ console.log(
 CONTINUE TO LOGIN
 ==================================================
 */
-
-continueButton.addEventListener(
-    "click",
-    async () => {
-
-        /*
-            Absolute protection against
-            clicking after lock.
-        */
-
-        if (examLocked) {
-
-            console.log(
-                "Continue blocked - exam locked."
-            );
-
-            return;
-
-        }
-
-
-        if (!securityCheckPassed) {
-
-            return;
-
-        }
-
-
-        continueButton.disabled =
-            true;
-
-
-        continueButton.textContent =
-            "Loading Login...";
-
-
-        try {
-
-            const response =
-                await window.electronAPI
-                    .loadCodeChef();
-
-
-            if (
-                response &&
-                response.success === false
-            ) {
-
-                throw new Error(
-                    response.message ||
-                    "Unable to load login page."
-                );
-
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "Login navigation error:",
-                error
-            );
-
-
-            /*
-                Do NOT restore the button
-                if the exam has been locked.
-            */
-
-            if (!examLocked) {
-
-                continueButton.disabled =
-                    true;
-
-
-            } finally {
-
-                securityCheckRunning =
-                    false;
-
-            }
-
-        }
-
-
-        /*
-        ==================================================
-        CONTINUE TO LOGIN
-        ==================================================
-        */
 
         continueButton.addEventListener(
             "click",

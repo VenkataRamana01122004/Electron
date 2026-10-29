@@ -11,9 +11,14 @@ const {
     getBackgroundApplications
 } = require("./security/backgroundApplications");
 
-const EXAM_DURATION_MS = 0.5 * 60 * 1000;
+const EXAM_DURATION_MS = 3 * 60 * 60 * 1000;
 // const ExamportalURL = "https://www.codechef.com/";
 const ExamportalURL = "http://localhost:5173/";
+const ROOM_VERIFICATION_PAGE = path.join(
+    __dirname,
+    "pages",
+    "room-verification.html"
+);
 const SECURITY_PAGE = path.join(__dirname, "pages", "security-check.html");
 
 let mainWindow = null;
@@ -61,7 +66,7 @@ function createWindow() {
     mainWindow.setKiosk(true);
     mainWindow.setFullScreen(true);
 
-    mainWindow.loadFile(SECURITY_PAGE);
+    mainWindow.loadFile(ROOM_VERIFICATION_PAGE);
 
 
     mainWindow.webContents.setWindowOpenHandler(() => {
@@ -491,8 +496,9 @@ ipcMain.handle(
 
 ipcMain.handle("navigation:load-codechef", async () => {
     if (
-    !securityCheckPassed ||
-    examLocked
+    !roomVerificationPassed ||
+        !securityCheckPassed ||
+        examLocked
 ) {
         console.log("CodeChef loading blocked.");
         console.log("Security checks have not passed.");
@@ -546,13 +552,21 @@ ipcMain.handle("system:end-process", async (event, processName) => {
             "chrome.exe",
             "obs.exe",
             "obs64.exe",
+            "obs.exe",
             "teamviewer.exe",
             "anydesk.exe",
             "discord.exe",
             "wireshark.exe",
             "fiddler.exe",
             "charles.exe",
-            "processhacker.exe"
+            "processhacker.exe",
+            "avica.exe",
+            "getscreen.exe",
+            "brave.exe",
+            "msedge.exe",
+            "ms-teams.exe",
+            "Teams.exe",
+            "msteams.exe"
         ];
 
         const normalizedName = String(processName).toLowerCase().trim();
@@ -810,30 +824,45 @@ ipcMain.handle("display:get-info", async () => {
     }
 });
 
+
 ipcMain.handle("exam:finish", async () => {
     console.log("Exam finished.");
 
+    // Stop the exam timer
     if (examCloseTimer) {
         clearTimeout(examCloseTimer);
         examCloseTimer = null;
     }
 
+    // Mark the exam as stopped
     endExam();
-    isQuitting = true;
-    stopProcessMonitoring();
+
+    // Stop proctoring process monitoring
+    try {
+        stopProcessMonitoring();
+    } catch (error) {
+        console.error("Unable to stop process monitoring:", error);
+    }
+
+    // IMPORTANT:
+    // Do not close exitWindow.
+    // Do not close mainWindow.
+    // Do not call app.quit().
+    // Keep the Exit Application button available.
 
     if (exitWindow && !exitWindow.isDestroyed()) {
-        exitWindow.close();
+        exitWindow.show();
+        exitWindow.setAlwaysOnTop(true, "screen-saver");
     }
 
-    if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.close();
-    }
+    console.log("Assessment completed. Exit button remains available.");
 
-    app.quit();
-
-    return { success: true };
+    return {
+        success: true,
+        message: "Assessment completed. You can exit the application."
+    };
 });
+
 
 ipcMain.handle("system:close-chrome", async () => {
     return new Promise(resolve => {
@@ -861,6 +890,47 @@ ipcMain.handle("system:close-chrome", async () => {
         );
     });
 });
+
+ipcMain.handle("room-verification:complete", async (event) => {
+    if (
+        !mainWindow ||
+        mainWindow.isDestroyed() ||
+        event.sender !== mainWindow.webContents
+    ) {
+        return { success: false, message: "Invalid window" };
+    }
+
+    // Only accept the request from the room verification page
+    try {
+        const currentUrl = new URL(event.senderFrame.url);
+        const currentPage = path.basename(
+            decodeURIComponent(currentUrl.pathname)
+        );
+
+        if (currentPage !== "room-verification.html") {
+            return {
+                success: false,
+                message: "Invalid verification page"
+            };
+        }
+    } catch {
+        return { success: false, message: "Invalid page URL" };
+    }
+
+    roomVerificationPassed = true;
+
+    try {
+        await mainWindow.loadFile(SECURITY_PAGE);
+
+        return { success: true };
+    } catch (error) {
+        roomVerificationPassed = false;
+        console.error("Unable to load security page:", error);
+
+        return { success: false, message: error.message };
+    }
+});
+
 
 app.whenReady().then(() => {
     console.log("Electron application started.");

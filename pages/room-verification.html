@@ -1,0 +1,454 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Room Verification</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #1e293b;
+    }
+
+    .container {
+      background: white;
+      width: 100%;
+      max-width: 650px;
+      padding: 30px;
+      border-radius: 18px;
+      text-align: center;
+      box-shadow: 0 10px 35px #0f172a18;
+    }
+
+    h1 { margin-top: 0; }
+
+    p {
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    video {
+      width: 100%;
+      background: #0f172a;
+      border-radius: 12px;
+      margin: 15px 0;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 9px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #start { background: #0f766e; }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .error { color: #dc2626; }
+    .success { color: #15803d; }
+    .warning { color: #b45309; }
+
+    .camera-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #dc2626;
+    }
+
+    .dot.active { background: #16a34a; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Room Verification</h1>
+
+    <p>
+      Before starting the exam, enable your camera and slowly
+      show your complete room. Keep the camera uncovered.
+    </p>
+
+    <video id="camera" autoplay muted playsinline></video>
+
+    <div class="camera-indicator">
+      <span id="cameraDot" class="dot"></span>
+      <span id="cameraLabel">Camera is off</span>
+    </div>
+
+    <p id="status" class="status warning" aria-live="polite">
+      Click Enable Camera to begin.
+    </p>
+
+    <button id="start">Enable Camera</button>
+    <button id="complete" disabled>Complete Room Scan</button>
+  </div>
+
+  <script>
+    const video = document.getElementById("camera");
+    const status = document.getElementById("status");
+    const startBtn = document.getElementById("start");
+    const completeBtn = document.getElementById("complete");
+    const cameraDot = document.getElementById("cameraDot");
+    const cameraLabel = document.getElementById("cameraLabel");
+
+    let stream = null;
+    let monitor = null;
+    let isContinuing = false;
+    let cameraStarting = false;
+    let coveredFrames = 0;
+
+    function setStatus(message, type = "warning") {
+      status.textContent = message;
+      status.className = `status ${type}`;
+    }
+
+    function setIndicator(active) {
+      cameraDot.classList.toggle("active", active);
+      cameraLabel.textContent = active
+        ? "Camera is active"
+        : "Camera is off";
+    }
+
+    function isCameraWorking() {
+      if (!stream || !video.srcObject) return false;
+
+      const track = stream.getVideoTracks()[0];
+
+      return Boolean(
+        track &&
+        track.readyState === "live" &&
+        track.enabled &&
+        video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0
+      );
+    }
+
+    // Basic black/very-dark-frame detection.
+    // This is a heuristic, not reliable hand recognition.
+    function isCameraCovered() {
+      if (!isCameraWorking()) return false;
+
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 32;
+        canvas.height = 24;
+
+        const ctx = canvas.getContext("2d", {
+          willReadFrequently: true
+        });
+
+        if (!ctx) return false;
+
+        ctx.drawImage(video, 0, 0, 32, 24);
+
+        const pixels = ctx.getImageData(
+          0, 0, canvas.width, canvas.height
+        ).data;
+
+        let darkPixels = 0;
+        let totalBrightness = 0;
+        const count = pixels.length / 4;
+
+        for (let i = 0; i < pixels.length; i += 4) {
+          const brightness =
+            0.299 * pixels[i] +
+            0.587 * pixels[i + 1] +
+            0.114 * pixels[i + 2];
+
+          totalBrightness += brightness;
+
+          if (brightness < 25) darkPixels++;
+        }
+
+        return (
+          darkPixels / count > 0.92 ||
+          totalBrightness / count < 12
+        );
+      } catch (error) {
+        console.error("Frame analysis failed:", error);
+        return false;
+      }
+    }
+
+    function updateCameraState() {
+      if (isContinuing || cameraStarting) return;
+
+      if (!isCameraWorking()) {
+        setIndicator(false);
+        completeBtn.disabled = true;
+        startBtn.disabled = false;
+
+        setStatus(
+          "Camera is off or disconnected. Please enable it again.",
+          "error"
+        );
+        return;
+      }
+
+      setIndicator(true);
+
+      if (isCameraCovered()) {
+        coveredFrames++;
+
+        // Require multiple consecutive dark frames to reduce false alarms.
+        if (coveredFrames >= 4) {
+          completeBtn.disabled = true;
+          setStatus(
+            "Camera may be covered. Remove your hand and show your room.",
+            "error"
+          );
+          return;
+        }
+      } else {
+        coveredFrames = 0;
+      }
+
+      completeBtn.disabled = false;
+      startBtn.disabled = true;
+
+      setStatus(
+        "Camera is working. Slowly show your complete room.",
+        "success"
+      );
+    }
+
+    function startMonitoring() {
+      clearInterval(monitor);
+
+      monitor = setInterval(updateCameraState, 500);
+    }
+
+    function stopCamera() {
+      clearInterval(monitor);
+      monitor = null;
+
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      stream = null;
+      video.srcObject = null;
+      coveredFrames = 0;
+      setIndicator(false);
+    }
+
+    async function enableCamera() {
+      if (isContinuing || cameraStarting) return;
+
+      cameraStarting = true;
+      startBtn.disabled = true;
+      completeBtn.disabled = true;
+
+      setStatus("Requesting camera access...", "warning");
+
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error(
+            "Camera access is unavailable. Check the Electron camera permissions."
+          );
+        }
+
+        stopCamera();
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+
+        video.srcObject = stream;
+
+        // Do not require track.muted === false here.
+        // Some devices briefly report muted during initialization.
+        await video.play();
+
+        // Wait for real video dimensions and frames.
+        const deadline = Date.now() + 10000;
+
+        while (Date.now() < deadline) {
+          if (isCameraWorking()) break;
+
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        if (!isCameraWorking()) {
+          throw new Error(
+            "Camera opened but no video frames were received. Check the camera."
+          );
+        }
+
+        const track = stream.getVideoTracks()[0];
+
+        track.addEventListener("ended", () => {
+          if (!isContinuing) updateCameraState();
+        });
+
+        track.addEventListener("mute", () => {
+          if (!isContinuing) {
+            completeBtn.disabled = true;
+            setStatus(
+              "Camera feed interrupted. Please check your camera.",
+              "error"
+            );
+          }
+        });
+
+        track.addEventListener("unmute", () => {
+          if (!isContinuing) updateCameraState();
+        });
+
+        coveredFrames = 0;
+        setIndicator(true);
+        startBtn.disabled = true;
+        completeBtn.disabled = false;
+
+        setStatus(
+          "Camera is working. Slowly show your complete room.",
+          "success"
+        );
+
+        startMonitoring();
+
+      } catch (error) {
+        console.error("Camera initialization failed:", error);
+
+        stopCamera();
+
+        startBtn.disabled = false;
+        completeBtn.disabled = true;
+
+        let message = "Unable to enable camera. Please try again.";
+
+        if (error.name === "NotAllowedError" ||
+            error.name === "PermissionDeniedError") {
+          message =
+            "Camera permission denied. Allow camera access in Windows or the application settings, then retry.";
+        } else if (error.name === "NotFoundError") {
+          message =
+            "No camera detected. Connect or enable your camera.";
+        } else if (error.name === "NotReadableError") {
+          message =
+            "Camera is busy or unavailable. Close other applications using it and retry.";
+        } else if (error.name === "NotSupportedError" ||
+                   error.name === "SecurityError") {
+          message =
+            "Camera access is blocked in this environment. Check Electron permissions and security settings.";
+        } else if (error.message) {
+          message = error.message;
+        }
+
+        setStatus(message, "error");
+
+      } finally {
+        cameraStarting = false;
+      }
+    }
+
+    startBtn.addEventListener("click", enableCamera);
+
+    completeBtn.addEventListener("click", async () => {
+      // Recheck the camera and cover state immediately.
+      if (!isCameraWorking()) {
+        completeBtn.disabled = true;
+        setStatus("Enable your camera before continuing.", "error");
+        return;
+      }
+
+      if (isCameraCovered()) {
+        completeBtn.disabled = true;
+        setStatus(
+          "Remove your hand from the camera before continuing.",
+          "error"
+        );
+        return;
+      }
+
+      if (isContinuing) return;
+
+      isContinuing = true;
+      startBtn.disabled = true;
+      completeBtn.disabled = true;
+
+      setStatus("Completing room verification...", "warning");
+
+      try {
+        if (
+          !window.electronAPI ||
+          typeof window.electronAPI.completeRoomVerification !== "function"
+        ) {
+          throw new Error(
+            "Electron room verification bridge is unavailable. Check preload.js."
+          );
+        }
+
+        // Release camera only when proceeding to the next stage.
+        stopCamera();
+
+        setStatus("Continuing to security checks...", "success");
+
+        const result =
+          await window.electronAPI.completeRoomVerification();
+
+        if (!result || !result.success) {
+          throw new Error(
+            result?.message || "Unable to continue to security checks."
+          );
+        }
+
+      } catch (error) {
+        console.error("Unable to continue:", error);
+
+        isContinuing = false;
+        startBtn.disabled = false;
+        completeBtn.disabled = true;
+
+        setStatus(
+          error.message || "Unable to continue. Please try again.",
+          "error"
+        );
+      }
+    });
+
+    window.addEventListener("beforeunload", stopCamera);
+
+    setIndicator(false);
+  </script>
+</body>
+</html>

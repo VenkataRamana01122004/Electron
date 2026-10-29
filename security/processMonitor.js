@@ -14,7 +14,14 @@ const PROHIBITED_PROCESSES = [
     "wireshark.exe",
     "fiddler.exe",
     "charles.exe",
-    "processhacker.exe"
+    "processhacker.exe",
+    "avica.exe",
+    "getscreen.exe",
+    "brave.exe",
+    "msedge.exe",
+    "ms-teams.exe",
+    "Teams.exe",
+    "msteams.exe"
 ];
 
 function normalizeName(name) {
