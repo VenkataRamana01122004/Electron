@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,9 +197,17 @@
           if (brightness < 25) darkPixels++;
         }
 
+        const darkRatio = darkPixels / count;
+        const avgBrightness = totalBrightness / count;
+
+        console.log({
+          darkRatio,
+          avgBrightness
+        });
+
         return (
-          darkPixels / count > 0.92 ||
-          totalBrightness / count < 12
+          darkRatio > 0.92 ||
+          avgBrightness < 12
         );
       } catch (error) {
         console.error("Frame analysis failed:", error);
@@ -208,52 +215,84 @@
       }
     }
 
-    function updateCameraState() {
-      if (isContinuing || cameraStarting) return;
+    let lastFrameHash = null;
+let frozenFrames = 0;
 
-      if (!isCameraWorking()) {
-        setIndicator(false);
-        completeBtn.disabled = true;
-        startBtn.disabled = false;
+function isVideoFrozen() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 32;
+  canvas.height = 24;
 
-        setStatus(
-          "Camera is off or disconnected. Please enable it again.",
-          "error"
-        );
-        return;
-      }
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, 32, 24);
 
-      setIndicator(true);
+  const data = ctx.getImageData(0, 0, 32, 24).data;
 
-      if (isCameraCovered()) {
-        coveredFrames++;
+  let hash = 0;
 
-        // Require multiple consecutive dark frames to reduce false alarms.
-        if (coveredFrames >= 4) {
-          completeBtn.disabled = true;
-          setStatus(
-            "Camera may be covered. Remove your hand and show your room.",
-            "error"
-          );
-          return;
-        }
-      } else {
-        coveredFrames = 0;
-      }
+  for (let i = 0; i < data.length; i += 20) {
+    hash += data[i];
+  }
 
-      completeBtn.disabled = false;
-      startBtn.disabled = true;
+  if (hash === lastFrameHash) {
+    frozenFrames++;
+  } else {
+    frozenFrames = 0;
+  }
 
-      setStatus(
-        "Camera is working. Slowly show your complete room.",
-        "success"
-      );
-    }
+  lastFrameHash = hash;
+
+  return frozenFrames > 5;
+}
+
+function updateCameraState() {
+  if (isContinuing || cameraStarting) return;
+
+  if (!isCameraWorking()) {
+    setIndicator(false);
+    completeBtn.disabled = true;
+    startBtn.disabled = false;
+
+    setStatus(
+      "Camera is off or disconnected. Please enable it again.",
+      "error"
+    );
+    return;
+  }
+
+  setIndicator(true);
+
+  const track = stream?.getVideoTracks()?.[0];
+
+  if (
+    !track ||
+    track.muted ||
+    isCameraCovered() ||
+    isVideoFrozen()
+  ) {
+    completeBtn.disabled = true;
+
+    setStatus(
+      "Camera is covered, shuttered, or not providing a live feed.",
+      "error"
+    );
+
+    return;
+  }
+
+  completeBtn.disabled = false;
+  startBtn.disabled = true;
+
+  setStatus(
+    "Camera is working. Slowly show your complete room.",
+    "success"
+  );
+}
 
     function startMonitoring() {
       clearInterval(monitor);
 
-      monitor = setInterval(updateCameraState, 500);
+      monitor = setInterval(updateCameraState, 100);
     }
 
     function stopCamera() {
